@@ -73,6 +73,8 @@ def load_schema() -> None:
     subprocess.run(
         [
             "psql",
+            "-X",
+            "--single-transaction",
             "-v",
             "ON_ERROR_STOP=1",
             "-q",

@@ -1,4 +1,4 @@
-# Local quick start: `docker compose up --build`, then open http://localhost:8080
+# Local quick start: `docker compose up --build --wait`, then open http://127.0.0.1:8080
 # (API docs: http://localhost:8000/api/docs). Production lives in deploy/.
 # Credentials default to throwaway local values; override them with environment variables or a .env file.
 name: oldshop-local
@@ -10,12 +10,10 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:-postgres}
       POSTGRES_DB: oldshop
-    ports:
-      - "5433:5432"   # 5433 to avoid clashing with a locally installed PostgreSQL
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d oldshop"]
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", "oldshop"]
       interval: 5s
       retries: 20
 
@@ -35,19 +33,34 @@ services:
       DB_PASSWORD: ${LOCAL_DB_PASSWORD:-postgres}
       DB_NAME: oldshop
       SECRET_KEY: ${LOCAL_SECRET_KEY:-local-dev-secret-change-me}
-      CORS_ORIGINS: http://localhost:8080,http://localhost:4200
+      CORS_ORIGINS: http://127.0.0.1:8080,http://localhost:8080
       WEB_CONCURRENCY: 1
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - media:/data/media
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health/ready"]
+      interval: 5s
+      timeout: 3s
+      start_period: 40s
+      retries: 12
 
   frontend:
     build:
       context: ./frontend
-    depends_on: [backend]
+    depends_on:
+      backend:
+        condition: service_healthy
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
+    configs:
+      - source: local_browser_headers
+        target: /etc/nginx/local-headers/browser.conf
+
+configs:
+  local_browser_headers:
+    file: ./frontend/nginx-local-headers.conf
 
 volumes:
   pg_data:

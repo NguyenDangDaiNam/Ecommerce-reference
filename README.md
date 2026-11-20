@@ -1,4 +1,56 @@
-# OldShop — second-hand marketplace
+# Ecommerce-reference
+
+OldShop là ứng dụng mua bán đồ cũ dùng FastAPI, PostgreSQL và Angular. Repo này
+được dùng để thử nghiệm cho học phần Thương mại điện tử và phát triển từ
+Epic-Ecommerce-FastAPI.
+
+## Chạy trên Windows hoặc macOS
+
+1. Cài và mở **Docker Desktop**. Trên Windows dùng Linux containers. Trên Mac chọn
+   bản đúng chip Apple silicon hoặc Intel. [Windows](https://docs.docker.com/desktop/setup/install/windows-install/) · [macOS](https://docs.docker.com/desktop/setup/install/mac-install/)
+2. Clone hoặc pull `NguyenDangDaiNam/Ecommerce-reference` bằng GitHub Desktop.
+   Mở folder repo trong VS Code và mở terminal tại thư mục có `docker-compose.yml`.
+3. Chạy một lệnh cho cả frontend, backend và PostgreSQL:
+
+   ```sh
+   docker compose up --build --wait
+   ```
+
+   Lần đầu Docker cần tải image và build ứng dụng. Project tự nạp schema,
+   sản phẩm, ảnh và tài khoản mẫu từ repo. Máy chỉ cần Docker Desktop để chạy;
+   Python, Node.js và PostgreSQL đã nằm trong các container.
+
+4. Mở [cửa hàng](http://127.0.0.1:8080) hoặc [Swagger UI](http://127.0.0.1:8000/api/docs).
+
+| Tài khoản mẫu | Email | Mật khẩu |
+|---|---|---|
+| Khách hàng | `user1@gmail.com` | `user123` |
+| Quản trị viên | `admin@oldshop.com` | `admin123` |
+
+Bản chạy thử dùng **thanh toán khi nhận hàng (COD)**. PayPal, email OTP và
+chuyển tiếp Google Apps Script để tắt. Dùng các tài khoản mẫu trên máy local.
+
+**Dừng và giữ dữ liệu** bằng lệnh:
+
+```sh
+docker compose stop
+```
+
+Khi mở lại hoặc sau khi pull mã mới, chạy lại `docker compose up --build --wait`.
+Ảnh và dữ liệu được lưu trong volume Docker. Khi repo có migration mới, áp dụng
+migration theo hướng dẫn của phiên bản đó.
+
+Nếu lệnh báo lỗi, kiểm tra Docker Desktop đã mở, rồi xem dịch vụ nào gặp vấn đề:
+
+```sh
+docker compose ps -a
+docker compose logs --tail=80
+```
+
+Nếu cổng `8080` hoặc `8000` đang bận, dừng đúng ứng dụng đang chạy trên cổng đó
+trước khi thử lại. Không cần nhập file `database.sql` bên ngoài repo.
+
+Xem thêm [cách clone và pull bằng GitHub Desktop cho nhóm TMĐT](docs/huong-dan-cai-dat-nhom-tmdt.md).
 
 A full-stack marketplace for second-hand goods: buyers browse and check out (COD or PayPal),
 sellers list products that go through moderation, moderators handle reports and bans,
@@ -53,35 +105,6 @@ integrations/google-apps-script/   contact relay (clasp project)
 deploy/                   production compose files, Caddy, Prometheus, Grafana, Loki, ELK, ops scripts
 docs/deployment.md        VPS runbook
 ```
-
-## Run locally
-
-**With Docker** (everything, seeded):
-
-```bash
-docker compose up --build
-# shop: http://localhost:8080   API docs: http://localhost:8000/api/docs
-```
-
-**Without Docker** (hot reload):
-
-```bash
-# database
-createdb oldshop && (cd database && psql -d oldshop -f init.sql)
-
-# backend
-cd backend
-python -m venv .venv && . .venv/bin/activate      # Windows: .venv\Scripts\activate
-pip install -r requirements-dev.txt
-cp .env.example .env                               # adjust DB credentials
-uvicorn app.main:app --reload
-
-# frontend
-cd frontend && npm ci && npm start                 # http://localhost:4200
-```
-
-Seeded accounts: `admin@oldshop.com / admin123`, `mod1@oldshop.com / mod123`,
-`user1@gmail.com … user11@gmail.com / user123`.
 
 ## Tests
 
